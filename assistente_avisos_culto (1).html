@@ -169,7 +169,7 @@ function buildPrompt(tipo, d) {
 
 async function gerarUma(tipo, d) {
   const prompt = buildPrompt(tipo, d);
-  const resp = await fetch('https://muddy-credit-edcb.pr-mer.workers.dev/', {
+  const resp = await fetch('https://assistente-aviso.pr-mer.workers.dev/', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
