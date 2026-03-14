@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Assistente de Avisos do Culto</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #f5f5f5; padding: 1rem; }
+.app { max-width: 700px; margin: 0 auto; }
+.section { background: #fff; border: 1px solid #e5e5e5; border-radius: 12px; padding: 1.25rem; margin-bottom: 1rem; }
+.section-title { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .05em; color: #888; margin-bottom: 1rem; }
+.form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px; }
+.form-grid.full { grid-template-columns: 1fr; }
+.field { display: flex; flex-direction: column; gap: 4px; }
+label { font-size: 12px; color: #666; }
+input, select, textarea { font-family: inherit; font-size: 13px; padding: 8px 10px; border: 1px solid #ddd; border-radius: 8px; background: #fafafa; color: #111; outline: none; }
+input:focus, select:focus, textarea:focus { border-color: #2E75B6; background: #fff; }
+textarea { resize: vertical; min-height: 60px; line-height: 1.5; }
+.tabs { display: flex; gap: 6px; margin-bottom: 1rem; flex-wrap: wrap; }
+.tab { font-size: 12px; padding: 5px 12px; border-radius: 20px; border: 1px solid #ddd; background: transparent; color: #666; cursor: pointer; }
+.tab.on { background: #EAF1FB; color: #1F4E79; border-color: transparent; font-weight: 600; }
+.btn { font-size: 13px; font-weight: 600; padding: 10px 20px; border-radius: 10px; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; transition: opacity .15s; }
+.btn-primary { background: #1F4E79; color: #fff; border: none; }
+.btn-primary:hover { opacity: .85; }
+.btn-primary:disabled { opacity: .5; cursor: not-allowed; }
+.msg-box { background: #f8f8f8; border-radius: 10px; padding: 1rem 1.1rem; font-size: 13px; line-height: 1.7; color: #111; white-space: pre-wrap; word-break: break-word; min-height: 80px; border: 1px solid #eee; }
+.msg-box.loading { color: #aaa; font-style: italic; }
+.badge { display: inline-block; font-size: 10px; padding: 2px 8px; border-radius: 10px; font-weight: 600; }
+.badge-fri { background: #EAF1FB; color: #1F4E79; }
+.badge-sun { background: #E8F5EE; color: #1A6B3C; }
+.badge-dis { background: #F3EEF9; color: #5B2C8C; }
+.copy-btn { font-size: 11px; padding: 4px 10px; border-radius: 8px; border: 1px solid #ddd; background: transparent; color: #666; cursor: pointer; }
+.copy-btn:hover { background: #f5f5f5; }
+.msg-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+.tip { font-size: 12px; color: #999; padding: 8px 10px; background: #f9f9f9; border-radius: 8px; border-left: 2px solid #ddd; margin-top: 8px; }
+.prog { display: flex; align-items: center; gap: 8px; font-size: 12px; color: #999; }
+.dot { width: 7px; height: 7px; border-radius: 50%; background: #999; animation: pulse 1s ease-in-out infinite; }
+.dot:nth-child(2) { animation-delay: .15s; }
+.dot:nth-child(3) { animation-delay: .3s; }
+@keyframes pulse { 0%,100%{opacity:.3;transform:scale(.8)} 50%{opacity:1;transform:scale(1)} }
+.regen-btn { font-size: 11px; padding: 4px 10px; border-radius: 8px; border: 1px solid #ddd; background: transparent; color: #666; cursor: pointer; margin-top: 8px; }
+.regen-btn:hover { border-color: #2E75B6; color: #2E75B6; }
+</style>
+</head>
+<body>
+<div class="app">
+
+  <div class="section">
+    <div class="section-title">Dados do culto desta semana</div>
+    <div class="form-grid" style="margin-bottom:10px">
+      <div class="field">
+        <label>Data do culto (domingo)</label>
+        <input type="date" id="data" />
+      </div>
+      <div class="field">
+        <label>Horário</label>
+        <input type="time" id="horario" value="10:00" />
+      </div>
+    </div>
+    <div class="form-grid" style="margin-bottom:10px">
+      <div class="field">
+        <label>Tema / título do sermão</label>
+        <input type="text" id="tema" placeholder="Ex: A fé que move montanhas" />
+      </div>
+      <div class="field">
+        <label>Texto bíblico</label>
+        <input type="text" id="texto" placeholder="Ex: Mateus 17:20" />
+      </div>
+    </div>
+    <div class="form-grid full" style="margin-bottom:10px">
+      <div class="field">
+        <label>Quem prega?</label>
+        <input type="text" id="pregador" placeholder="Ex: Pr. João" />
+      </div>
+    </div>
+    <div class="form-grid full" style="margin-bottom:10px">
+      <div class="field">
+        <label>Avisos especiais (opcional)</label>
+        <textarea id="avisos" placeholder="Ex: Reunião de jovens na sexta às 20h. Entrega de cestas sábado às 9h."></textarea>
+      </div>
+    </div>
+    <div class="form-grid full">
+      <div class="field">
+        <label>Tom das mensagens</label>
+        <select id="tom">
+          <option value="caloroso">Caloroso e acolhedor</option>
+          <option value="animado">Animado e entusiasta</option>
+          <option value="simples">Simples e direto</option>
+          <option value="poetico">Poético e reflexivo</option>
+        </select>
+      </div>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">Mensagens para gerar</div>
+    <div class="tabs" id="tipo-tabs">
+      <button class="tab on" onclick="selectTipo('sexta',this)">Sexta à noite</button>
+      <button class="tab" onclick="selectTipo('domingo',this)">Domingo cedo</button>
+      <button class="tab" onclick="selectTipo('discipulado',this)">Discipulado (quinta)</button>
+      <button class="tab" onclick="selectTipo('todas',this)">Todas de uma vez</button>
+    </div>
+    <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+      <button class="btn btn-primary" onclick="gerar()" id="btn-gerar">✦ Gerar mensagem</button>
+      <span id="prog" style="display:none" class="prog">
+        <span class="dot"></span><span class="dot"></span><span class="dot"></span>
+        <span id="prog-text">Gerando...</span>
+      </span>
+    </div>
+  </div>
+
+  <div id="resultados"></div>
+
+</div>
+
+<script>
+let tipoAtual = 'sexta';
+
+function selectTipo(t, el) {
+  tipoAtual = t;
+  document.querySelectorAll('#tipo-tabs .tab').forEach(x => x.classList.remove('on'));
+  el.classList.add('on');
+  document.getElementById('btn-gerar').textContent =
+    t === 'todas' ? '✦ Gerar todas as mensagens' : '✦ Gerar mensagem';
+}
+
+function getData() {
+  const d = document.getElementById('data').value;
+  let dataStr = '';
+  if (d) {
+    const dt = new Date(d + 'T12:00:00');
+    dataStr = dt.toLocaleDateString('pt-BR', { weekday: 'long', day: '2-digit', month: 'long' });
+  }
+  return {
+    data: dataStr || 'domingo',
+    horario: document.getElementById('horario').value || '10h',
+    tema: document.getElementById('tema').value || '(tema não informado)',
+    texto: document.getElementById('texto').value || '',
+    pregador: document.getElementById('pregador').value || '',
+    avisos: document.getElementById('avisos').value || '',
+    tom: document.getElementById('tom').value
+  };
+}
+
+const tomDesc = {
+  caloroso: 'Use linguagem calorosa, acolhedora, familiar. Emojis com moderação (2-3 por mensagem). Tom de família e comunidade.',
+  animado: 'Use linguagem animada e entusiasmada! Exclamações, emojis alegres (3-4). Transmita empolgação e expectativa.',
+  simples: 'Seja direto e objetivo. Sem floreios. Apenas as informações essenciais. Máximo 1-2 emojis.',
+  poetico: 'Use linguagem poética e reflexiva. Uma frase de abertura inspiradora. Tom contemplativo e profundo.'
+};
+
+function buildPrompt(tipo, d) {
+  const textoRef = d.texto ? 'Texto bíblico: ' + d.texto : '';
+  const pregRef = d.pregador ? 'Pregador: ' + d.pregador : '';
+  const avisosRef = d.avisos ? 'Avisos especiais: ' + d.avisos : '';
+  const tomRef = tomDesc[d.tom] || '';
+
+  const base = 'Você é o assistente de comunicação de uma pequena igreja evangélica pentecostal chamada "Igreja Evangélica Pentecostal" localizada no Jardim Esmeralda, Taboão da Serra, SP. A igreja tem cerca de 100 membros de classe popular. ' + tomRef + '\n\nRegras:\n- Escreva APENAS o texto da mensagem, pronto para copiar no WhatsApp\n- Use formatação WhatsApp: *negrito*, _itálico_\n- Inclua quebras de linha naturais\n- Não inclua saudações genéricas como "Olá"\n- Finalize com o endereço: Jardim Esmeralda, Taboão da Serra\n- Máximo 250 palavras por mensagem';
+
+  if (tipo === 'sexta') return base + '\n\nCrie uma mensagem de WhatsApp para ser enviada na SEXTA-FEIRA À NOITE (lembrete do culto de domingo):\n- Data: ' + d.data + '\n- Horário: ' + d.horario + '\n- Tema do sermão: ' + d.tema + '\n' + textoRef + '\n' + pregRef + '\n' + avisosRef + '\n\nA mensagem deve criar expectativa e motivar as pessoas a virem no domingo.';
+
+  if (tipo === 'domingo') return base + '\n\nCrie uma mensagem de WhatsApp para ser enviada no DOMINGO BEM CEDO (manhã do culto):\n- Data: ' + d.data + '\n- Horário: ' + d.horario + '\n- Tema do sermão: ' + d.tema + '\n' + textoRef + '\n' + pregRef + '\n' + avisosRef + '\n\nA mensagem deve ser breve, animada, como um "bom dia" que lembra e convida para o culto daquele dia.';
+
+  if (tipo === 'discipulado') return base + '\n\nCrie uma mensagem de WhatsApp para lembrar do CULTO DE DISCIPULADO (Trilha de Crescimento) de QUINTA-FEIRA às 20h:\n' + avisosRef + '\n\nA mensagem deve valorizar o crescimento espiritual e a importância de comparecer ao discipulado.';
+
+  return null;
+}
+
+async function gerarUma(tipo, d) {
+  const prompt = buildPrompt(tipo, d);
+  const resp = await fetch('crédito-muddy-edcb.pr-mer.workers.dev', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      model: 'claude-sonnet-4-20250514',
+      max_tokens: 1000,
+      messages: [{ role: 'user', content: prompt }]
+    })
+  });
+  const json = await resp.json();
+  return json.content?.[0]?.text || 'Erro ao gerar mensagem.';
+}
+
+function msgCard(tipo, texto, isLoading) {
+  const labels = {
+    sexta: ['Sexta à noite', 'badge-fri', '🌙 Enviar sexta, 20h–22h'],
+    domingo: ['Domingo cedo', 'badge-sun', '☀️ Enviar domingo, 6h–8h'],
+    discipulado: ['Quinta — Discipulado', 'badge-dis', '📖 Enviar quinta, 18h–19h']
+  };
+  const [nome, badgeClass, dica] = labels[tipo];
+  return '<div class="section" id="card-' + tipo + '">' +
+    '<div class="msg-header">' +
+    '<span class="badge ' + badgeClass + '">' + nome + '</span>' +
+    (!isLoading ? '<button class="copy-btn" onclick="copiar(\'msg-' + tipo + '\',this)">Copiar</button>' : '') +
+    '</div>' +
+    '<div class="msg-box ' + (isLoading ? 'loading' : '') + '" id="msg-' + tipo + '">' +
+    (isLoading ? 'Gerando mensagem...' : texto) + '</div>' +
+    (!isLoading ? '<div style="margin-top:8px"><div class="tip">' + dica + '</div></div>' +
+    '<button class="regen-btn" onclick="regenerar(\'' + tipo + '\')">↺ Regenerar</button>' : '') +
+    '</div>';
+}
+
+async function gerar() {
+  const d = getData();
+  const btn = document.getElementById('btn-gerar');
+  const prog = document.getElementById('prog');
+  const res = document.getElementById('resultados');
+  btn.disabled = true;
+  prog.style.display = 'flex';
+
+  const tipos = tipoAtual === 'todas'
+    ? ['sexta', 'domingo', 'discipulado']
+    : [tipoAtual];
+  res.innerHTML = tipos.map(t => msgCard(t, '', true)).join('');
+
+  for (const t of tipos) {
+    document.getElementById('prog-text').textContent =
+      'Gerando mensagem de ' + (t === 'sexta' ? 'sexta' : t === 'domingo' ? 'domingo' : 'quinta') + '...';
+    try {
+      const texto = await gerarUma(t, d);
+      const card = document.getElementById('card-' + t);
+      if (card) card.outerHTML = msgCard(t, texto, false);
+    } catch (e) {
+      const card = document.getElementById('card-' + t);
+      if (card) card.outerHTML = msgCard(t, 'Erro ao gerar. Tente novamente.', false);
+    }
+  }
+
+  btn.disabled = false;
+  prog.style.display = 'none';
+}
+
+async function regenerar(tipo) {
+  const d = getData();
+  const card = document.getElementById('card-' + tipo);
+  if (card) card.outerHTML = msgCard(tipo, '', true);
+  try {
+    const texto = await gerarUma(tipo, d);
+    const c = document.getElementById('card-' + tipo);
+    if (c) c.outerHTML = msgCard(tipo, texto, false);
+  } catch (e) {
+    const c = document.getElementById('card-' + tipo);
+    if (c) c.outerHTML = msgCard(tipo, 'Erro ao gerar. Tente novamente.', false);
+  }
+}
+
+function copiar(id, btn) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  navigator.clipboard.writeText(el.textContent).then(() => {
+    btn.textContent = 'Copiado ✓';
+    setTimeout(() => btn.textContent = 'Copiar', 2000);
+  });
+}
+
+// Set default date to next Sunday
+(function () {
+  const today = new Date();
+  const day = today.getDay();
+  const diff = day === 0 ? 7 : (7 - day);
+  const next = new Date(today);
+  next.setDate(today.getDate() + diff);
+  document.getElementById('data').value = next.toISOString().split('T')[0];
+})();
+</script>
+</body>
+</html>
